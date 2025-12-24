@@ -16,7 +16,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 // 🔥 ADD THIS
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 axios.defaults.withCredentials = true;
 
 // 🔥 Automatically attach token to all requests

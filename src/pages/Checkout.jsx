@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import api from "../services/api";
 
 export default function Checkout() {
   const [cart, setCart] = useState([]);
@@ -17,25 +18,22 @@ export default function Checkout() {
   );
 
   const payWithPaystack = async () => {
-    setLoading(true);
-    setMessage("");
+  setLoading(true);
 
-    try {
-      const res = await axios.post("http://localhost:5000/paystack/initialize", {
-        amount: totalAmount * 100, // in kobo
-        email: "customer@example.com", // replace with logged-in user email
-      });
+  try {
+    const res = await api.post("/paystack/initialize", {
+      amount: totalAmount * 100,
+      email: "customer@example.com",
+    });
 
-      const { authorization_url } = res.data.data;
-      window.location.href = authorization_url;
-    } catch (err) {
-      setMessage(
-        "Payment error: " + (err.response?.data?.message || err.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    window.location.href = res.data.data.authorization_url;
+  } catch (err) {
+    setMessage("Payment failed", err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">

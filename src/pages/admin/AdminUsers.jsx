@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -8,22 +9,31 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-  if (!token) navigate("/login"); // redirect if not logged in
-
+  // FETCH USERS
   const fetchUsers = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:5000/users", {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await api.get("/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      if (res.status === 401) return navigate("/login");
-
-      const data = await res.json();
-      setUsers(data);
-      setLoading(false);
+      setUsers(res.data);
     } catch (err) {
-      console.error(err);
+      if (err.response?.status === 401) {
+        navigate("/login");
+      } else {
+        console.error(err);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,32 +41,47 @@ export default function AdminUsers() {
     fetchUsers();
   }, []);
 
+  // DELETE USER
   const deleteUser = async (id) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     try {
-      await fetch(`http://localhost:5000/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      const token = localStorage.getItem("token");
+
+      await api.delete(`/users/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       setUsers(users.filter((u) => u._id !== id));
     } catch (err) {
       console.error(err);
     }
   };
 
+  // BLOCK / UNBLOCK USER
   const toggleBlock = async (id) => {
     try {
-      await fetch(`http://localhost:5000/users/block/${id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = localStorage.getItem("token");
+
+      await api.put(
+        `/users/block/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       fetchUsers();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🔍 Filter users by name or email
+  // 🔍 FILTER USERS
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -64,13 +89,15 @@ export default function AdminUsers() {
   );
 
   return (
-    <div className="flex">
-      <Sidebar />
+    <div className="flex min-h-screen bg-gray-100">
+      <div className="w-64 flex-shrink-0">
+        <Sidebar />
+      </div>
 
-      <div className="ml-64 w-full p-6">
+      <div className="flex-1 p-6">
         {/* Header + Search */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Manage Users</h1>
+          <h1 className="text-3xl font-bold">Manage Users</h1>
 
           <input
             type="text"
@@ -120,7 +147,7 @@ export default function AdminUsers() {
                           </span>
                         )}
                       </td>
-                      <td className="p-3 flex items-center justify-center gap-3">
+                      <td className="p-3 flex justify-center gap-3">
                         <button
                           onClick={() => toggleBlock(user._id)}
                           className={`px-3 py-1 rounded text-white ${
@@ -150,3 +177,4 @@ export default function AdminUsers() {
     </div>
   );
 }
+

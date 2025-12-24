@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
+
 
 /**
  * Home Component
@@ -35,31 +37,33 @@ export default function Home() {
 }, []);
 
   // Fetch products from backend
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/products"); // backend endpoint
-        const data = await res.json();
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get("/products");
+      const data = res.data;
 
-        // Map backend fields to frontend-friendly fields
-        const mapped = data.map((p) => ({
-          id: p._id,
-          title: p.title || p.name,
-          price: p.price,
-          image: p.image || p.imageUrl,
-          category: p.category || "Uncategorized",
-          rating: p.rating || 4.7,
-          description: p.description || p.desc,
-        }));
+      const mapped = data.map((p) => ({
+        id: p._id,
+        title: p.title || p.name,
+        price: p.price,
+        image: p.image || p.imageUrl,
+        category: p.category || "Uncategorized",
+        rating: p.rating || 4.7,
+        description: p.description || p.desc,
+      }));
 
-        setProducts(mapped);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-      }
-    };
+      setProducts(mapped);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    fetchProducts();
-  }, []);
+  fetchProducts();
+}, []);
+
+
+
 
   // Load cart from localStorage
   useEffect(() => setCart(JSON.parse(localStorage.getItem("cart")) || []), []);
@@ -105,7 +109,7 @@ export default function Home() {
         {/* Flash Deals */}
         <section className="mt-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-semibold">Flash Deals</h3>
+            <h3 className="text-xl font-serif font-semibold">Flash Deals</h3>
             <button
               className="text-lg text-indigo-600 capitalize font-sans"
               onClick={() => document.getElementById("products-grid").scrollIntoView({ behavior: "smooth" })}
@@ -133,7 +137,7 @@ export default function Home() {
 
         {/* Trending Products */}
         <section id="products-grid" className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Trending Products</h2>
+          <h2 className="text-2xl font-sans font-bold mb-4">Trending Products</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((p) => (
               <div key={p.id} className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition relative">

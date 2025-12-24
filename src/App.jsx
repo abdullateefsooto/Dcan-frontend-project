@@ -9,6 +9,7 @@ export default function App() {
   const hideNavbar =
     location.pathname.includes("/login") ||
     location.pathname.includes("/Register") ||
+    location.pathname.includes("/register") ||
     location.pathname.includes("/admin");
 
   return (

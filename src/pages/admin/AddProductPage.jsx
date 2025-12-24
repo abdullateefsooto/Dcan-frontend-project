@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Sidebar from "../../components/Sidebar";
+import api from "../../services/api";
 
 export default function AddProductPage() {
   const [name, setName] = useState("");
@@ -12,17 +12,19 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!imageFile) return setMessage("❌ Please select an image");
+
+    if (!imageFile) {
+      setMessage("❌ Please select an image");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
 
     try {
-      // 🔹 CLOUDINARY UPLOAD (FETCH — NO CORS ISSUES)
+      // 🔹 UPLOAD IMAGE TO CLOUDINARY
       const formData = new FormData();
       formData.append("file", imageFile);
       formData.append(
@@ -32,7 +34,9 @@ export default function AddProductPage() {
       formData.append("folder", "products");
 
       const cloudRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${
+          import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+        }/image/upload`,
         {
           method: "POST",
           body: formData,
@@ -50,8 +54,8 @@ export default function AddProductPage() {
       // 🔹 SAVE PRODUCT TO BACKEND
       const token = localStorage.getItem("token");
 
-      await axios.post(
-        `${API_URL}/products`,
+      await api.post(
+        "/products",
         {
           name,
           price: Number(price),
@@ -68,6 +72,8 @@ export default function AddProductPage() {
       );
 
       setMessage("✅ Product added successfully!");
+
+      // RESET FORM
       setName("");
       setPrice("");
       setCategory("");
@@ -89,7 +95,7 @@ export default function AddProductPage() {
         <Sidebar />
       </div>
 
-      {/* Main content */}
+      {/* Main Content */}
       <div className="flex-1 p-6 overflow-auto">
         <h2 className="text-3xl font-bold font-serif mb-6 text-gray-800">
           Add New Product
